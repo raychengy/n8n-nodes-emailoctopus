@@ -7,12 +7,18 @@ import type {
 import { contactFields, contactOperations } from './descriptions';
 import * as crypto from 'crypto';
 
+enum ContactStatus {
+	Subscribed = 'subscribed',
+	Unsubscribed = 'unsubscribed',
+	Pending = 'pending',
+}
+
 interface EmailOctopusRequestBody {
 	email_address?: string;
 	first_name?: string;
 	last_name?: string;
 	fields?: Record<string, unknown>;
-	status?: 'subscribed' | 'unsubscribed' | 'pending';
+	status?: ContactStatus;
 	tags?: string[];
 }
 
@@ -75,7 +81,7 @@ export class EmailOctopus implements INodeType {
 						'emailOctopusApi',
 						{
 							method: 'GET',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}`,
 							json: true,
 						},
 					);
@@ -90,16 +96,22 @@ export class EmailOctopus implements INodeType {
 					const firstName = this.getNodeParameter('firstName', i) as string;
 					const lastName = this.getNodeParameter('lastName', i) as string;
 
-					if (firstName) fields.FirstName = firstName;
-					if (lastName) fields.LastName = lastName;
-					if (Object.keys(fields).length > 0) body.fields = fields;
+					fields.FirstName = firstName;
+					fields.LastName = lastName;
+
+					body.fields = fields;
+					body.status = this.getNodeParameter(
+						'status',
+						i,
+						ContactStatus.Subscribed,
+					) as ContactStatus;
 
 					response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'emailOctopusApi',
 						{
 							method: 'PUT',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts`,
 							body,
 							json: true,
 						},
@@ -107,13 +119,13 @@ export class EmailOctopus implements INodeType {
 					break;
 				}
 				case 'unsubscribe': {
-					const body: EmailOctopusRequestBody = { status: 'unsubscribed' };
+					const body: EmailOctopusRequestBody = { status: ContactStatus.Unsubscribed };
 					response = await this.helpers.httpRequestWithAuthentication.call(
 						this,
 						'emailOctopusApi',
 						{
 							method: 'PUT',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}`,
 							body,
 							json: true,
 						},
@@ -128,7 +140,7 @@ export class EmailOctopus implements INodeType {
 						'emailOctopusApi',
 						{
 							method: 'POST',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}/tags`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}/tags`,
 							body,
 							json: true,
 						},
@@ -142,7 +154,7 @@ export class EmailOctopus implements INodeType {
 						'emailOctopusApi',
 						{
 							method: 'DELETE',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}/tags/${removeTag}`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}/tags/${removeTag}`,
 							json: true,
 						},
 					);
@@ -157,7 +169,7 @@ export class EmailOctopus implements INodeType {
 						'emailOctopusApi',
 						{
 							method: 'GET',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}`,
 							json: true,
 						},
 					);
@@ -174,7 +186,7 @@ export class EmailOctopus implements INodeType {
 						'emailOctopusApi',
 						{
 							method: 'POST',
-							url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts`,
+							url: `https://api.emailoctopus.com/lists/${listId}/contacts`,
 							body: createBody,
 							json: true,
 						},
@@ -183,7 +195,7 @@ export class EmailOctopus implements INodeType {
 					// 3. Delete old contact
 					await this.helpers.httpRequestWithAuthentication.call(this, 'emailOctopusApi', {
 						method: 'DELETE',
-						url: `https://api.emailoctopus.com/1.6/lists/${listId}/contacts/${contactId}`,
+						url: `https://api.emailoctopus.com/lists/${listId}/contacts/${contactId}`,
 						json: true,
 					});
 
