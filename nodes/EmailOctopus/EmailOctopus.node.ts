@@ -89,17 +89,16 @@ export class EmailOctopus implements INodeType {
 				}
 				case 'addUpdate': {
 					const body: EmailOctopusRequestBody = { email_address: email };
-					const fields = this.getNodeParameter('fields', i, {}) as Record<
-						string,
-						string | string[] | number | null
-					>;
+					const fields = this.getNodeParameter('fields', i, '{}') as string;
+					const fieldsJson: Record<string, string | string[] | number | null> = JSON.parse(fields);
+
 					const firstName = this.getNodeParameter('firstName', i) as string;
 					const lastName = this.getNodeParameter('lastName', i) as string;
 
-					fields.FirstName = firstName;
-					fields.LastName = lastName;
+					fieldsJson.FirstName = firstName;
+					fieldsJson.LastName = lastName;
 
-					body.fields = fields;
+					body.fields = fieldsJson;
 					body.status = this.getNodeParameter(
 						'status',
 						i,
