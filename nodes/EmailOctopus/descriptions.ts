@@ -108,6 +108,33 @@ export const contactFields: INodeProperties[] = [
 		},
 		description: 'An object of merge fields to create or update',
 	},
+	// status
+	{
+		displayName: 'Status',
+		name: 'status',
+		type: 'options',
+		options: [
+			{
+				name: 'Pending',
+				value: 'pending',
+			},
+			{
+				name: 'Subscribed',
+				value: 'subscribed',
+			},
+			{
+				name: 'Unsubscribed',
+				value: 'unsubscribed',
+			},
+		],
+		default: 'subscribed',
+		displayOptions: {
+			show: {
+				operation: ['addUpdate'],
+			},
+		},
+		description: 'Status of the contact',
+	},
 	// tag
 	{
 		displayName: 'Tag',
